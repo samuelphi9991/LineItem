@@ -5,6 +5,7 @@ import {
   TextContainer,
   DisplayText,
   TextStyle,
+  Button,
 } from "@shopify/polaris";
 import { Toast } from "@shopify/app-bridge-react";
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
@@ -21,7 +22,7 @@ export function ProductsCard() {
     isLoading: isLoadingCount,
     isRefetching: isRefetchingCount,
   } = useAppQuery({
-    url: "/api/products/count",
+    url: "/api/lineitemimages",
     reactQueryOptions: {
       onSuccess: () => {
         setIsLoading(false);
@@ -32,6 +33,15 @@ export function ProductsCard() {
   const toastMarkup = toastProps.content && !isRefetchingCount && (
     <Toast {...toastProps} onDismiss={() => setToastProps(emptyToastProps)} />
   );
+
+  const readDatabase = async () => {
+    console.log("Pressed Read Database button.");
+    await fetch(`/api/lineitemimages`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+  };
 
   const handlePopulate = async () => {
     setIsLoading(true);
@@ -53,11 +63,11 @@ export function ProductsCard() {
     <>
       {toastMarkup}
       <Card
-        title="Product Counter"
+        title="Current Images"
         sectioned
         primaryFooterAction={{
-          content: "Populate 5 products",
-          onAction: handlePopulate,
+          content: "Read database",
+          onAction: readDatabase,
           loading: isLoading,
         }}
       >

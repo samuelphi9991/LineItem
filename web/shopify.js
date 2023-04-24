@@ -3,7 +3,10 @@ import { shopifyApp } from "@shopify/shopify-app-express";
 import { SQLiteSessionStorage } from "@shopify/shopify-app-session-storage-sqlite";
 import { restResources } from "@shopify/shopify-api/rest/admin/2023-04";
 
-const DB_PATH = `${process.cwd()}/database.sqlite`;
+import sqlite3 from "sqlite3";
+import { join } from "path";
+
+import { QRCodesDB } from "./qr-codes-db.js";
 
 // The transactions with Shopify will always be marked as test transactions, unless NODE_ENV is production.
 // See the ensureBilling helper to learn more about billing in this template.
@@ -15,6 +18,23 @@ const billingConfig = {
     interval: BillingInterval.OneTime,
   },
 };
+
+// "New database" might be redundant, might have to comment out
+
+const databasePath = join(process.cwd(), "database.sqlite");
+const database = new sqlite3.Database(databasePath);
+
+// Initialize SQLite DB
+QRCodesDB.db = database;
+QRCodesDB.init();
+
+// Test CRUD function should print 0 which I added from CLI
+const query = `
+  SELECT * FROM merchant_info;
+  `; 
+QRCodesDB.__query(query).then((testQueryResult) => {
+  console.log("Result from test query: " + JSON.stringify(testQueryResult));
+})
 
 const shopify = shopifyApp({
   api: {
@@ -29,8 +49,8 @@ const shopify = shopifyApp({
   webhooks: {
     path: "/api/webhooks",
   },
-  // This should be replaced with your preferred storage strategy
-  sessionStorage: new SQLiteSessionStorage(DB_PATH),
+  sessionStorage: new SQLiteSessionStorage(database),
 });
+
 
 export default shopify;
